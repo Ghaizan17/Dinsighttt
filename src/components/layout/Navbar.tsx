@@ -122,6 +122,7 @@ const Navbar = () => {
               )}
             </button>
 
+          </div>
 
           {/* MOBILE BUTTON */}
           <button

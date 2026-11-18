@@ -122,35 +122,6 @@ const Navbar = () => {
               )}
             </button>
 
-            {/* LOGIN / DASHBOARD */}
-            {user ? (
-              <>
-                <Link
-                  to="/admin/dashboard"
-                  className="px-5 py-2 rounded-full bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-bold hover:bg-slate-800 dark:hover:bg-white/80 transition"
-                >
-                  Dashboard
-                </Link>
-
-                <button
-                  type="button"
-                  onClick={() => signOut()}
-                  className="px-5 py-2 rounded-full bg-red-500/20 border border-red-500/20 text-red-500 dark:text-red-400 hover:bg-red-500/40 transition flex items-center"
-                >
-                  <LogOut className="w-4 h-4 mr-1" />
-                  Logout
-                </button>
-              </>
-            ) : (
-              <Link
-                to="/login"
-                className="px-5 py-2 rounded-full border border-slate-300 dark:border-white/20 text-slate-700 dark:text-white font-semibold hover:border-cyan-500 hover:text-cyan-500 transition"
-              >
-                Login
-              </Link>
-            )}
-
-          </div>
 
           {/* MOBILE BUTTON */}
           <button

@@ -59,6 +59,9 @@ function App() {
         <Route path="blogs" element={<AdminBlogs />} />
         <Route path="guestbooks" element={<AdminGuestbooks />} />
       </Route>
+
+      {/* URL tidak dikenal: kembali ke halaman utama */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 }

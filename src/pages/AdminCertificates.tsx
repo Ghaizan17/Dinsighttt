@@ -4,6 +4,7 @@ import { Plus, Trash2, Edit3, Image } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import { getPublicUrl } from '../hooks/useStorage';
+import { useFilePreview } from '../hooks/useFilePreview';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import type { Certificate } from '../hooks/useCertificates';
 
@@ -25,6 +26,8 @@ const AdminCertificates = () => {
   });
 
   const isEdit = editId !== null;
+  const localPreview = useFilePreview(form.imageFile);
+  const previewUrl = localPreview || (form.image ? getPublicUrl(form.image) : '');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,16 +127,18 @@ const AdminCertificates = () => {
           </div>
           <div>
             <label className="block text-sm font-semibold mb-2">Foto Sertifikat (opsional)</label>
-            {isEdit && form.image && (
+            {previewUrl && (
               <div className="mb-3">
-                <img src={getPublicUrl(form.image)} alt="current" className="w-40 rounded-xl mb-2" />
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, image: '', imageFile: null })}
-                  className="text-xs text-red-500 hover:text-red-600 underline"
-                >
-                  Hapus gambar saat ini
-                </button>
+                <img src={previewUrl} alt="preview" className="w-40 rounded-xl mb-2" />
+                {isEdit && form.image && !form.imageFile && (
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, image: '', imageFile: null })}
+                    className="text-xs text-red-500 hover:text-red-600 underline"
+                  >
+                    Hapus gambar saat ini
+                  </button>
+                )}
               </div>
             )}
             <label className="block text-sm font-semibold mb-2">Pilih Gambar Baru</label>
@@ -150,7 +155,7 @@ const AdminCertificates = () => {
           <Input label="URL Verifikasi" type="url" value={form.credential_url} onChange={(e) => setForm({ ...form, credential_url: e.target.value })} placeholder="https://..." />
           <div className="flex gap-3 pt-2">
             <Button type="submit" disabled={loading} className="flex-1">{isEdit ? 'Update' : 'Simpan'}</Button>
-            <Button variant="ghost" onClick={() => setOpen(false)} className="flex-1">Batal</Button>
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="flex-1">Batal</Button>
           </div>
         </form>
       </Modal>

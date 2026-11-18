@@ -29,7 +29,8 @@ export function useExperiences() {
 
   const createExperience = useCallback(
     async (payload: ExperienceInsert & { imageFile?: File; removeImage?: boolean }) => {
-      const { imageFile, removeImage, ...dbPayload } = stripUploadFields(payload);
+      const { imageFile, removeImage } = payload;
+      const dbPayload = stripUploadFields(payload);
 
       let imagePath = dbPayload.image as string | undefined;
       if (imageFile) {
@@ -60,17 +61,23 @@ export function useExperiences() {
       id: string,
       payload: ExperienceUpdate & { imageFile?: File; removeImage?: boolean },
     ) => {
-      const { imageFile, removeImage, ...dbPayload } = stripUploadFields(payload);
+      const { imageFile, removeImage } = payload;
+      const dbPayload = stripUploadFields(payload);
 
-      let imagePath = dbPayload.image as string | undefined;
-      if (removeImage && dbPayload.image) {
-        await supabase.storage.from('public').remove([dbPayload.image]);
-        imagePath = undefined;
+      let imagePath = dbPayload.image as string | null | undefined;
+
+      // Hapus file lama di server bila gambar diganti atau dihapus.
+      if (removeImage || imageFile) {
+        const { data: current } = await supabase
+          .from('experiences')
+          .select('image')
+          .eq('id', id)
+          .single();
+        const oldPath = (current as { image?: string | null } | null)?.image;
+        if (oldPath) await supabase.storage.from('public').remove([oldPath]);
+        if (removeImage) imagePath = null;
       }
       if (imageFile) {
-        if (dbPayload.image) {
-          await supabase.storage.from('public').remove([dbPayload.image]);
-        }
         const fileName = `${Date.now()}-${imageFile.name.replace(/\s+/g, '_')}`;
         const { error: uploadErr } = await supabase.storage
           .from('public')

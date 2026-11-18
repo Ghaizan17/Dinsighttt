@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
 import { ArrowUpRightFromSquare, ArrowRight } from 'lucide-react';
 import { useProjects } from '../hooks/useProjects';
 import { useSkills } from '../hooks/useSkills';
@@ -115,12 +114,12 @@ const Home = () => {
                 Saya senang mengubah ide menjadi website dan aplikasi yang interaktif, fungsional, dan mudah digunakan.
               </p>
               <div className="flex flex-wrap gap-4 mt-9">
-                <Link to="#projects" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-semibold hover:-translate-y-1 hover:shadow-xl transition duration-300">
+                <a href="#projects" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 font-semibold hover:-translate-y-1 hover:shadow-xl transition duration-300">
                   <i className="fa-solid fa-folder-open" /> Lihat Portofolio
-                </Link>
-                <Link to="#cv" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border border-slate-300 dark:border-white/20 bg-white/70 dark:bg-white/5 text-slate-800 dark:text-white font-semibold hover:border-cyan-500 hover:text-cyan-500 hover:-translate-y-1 transition duration-300">
+                </a>
+                <a href="#cv" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border border-slate-300 dark:border-white/20 bg-white/70 dark:bg-white/5 text-slate-800 dark:text-white font-semibold hover:border-cyan-500 hover:text-cyan-500 hover:-translate-y-1 transition duration-300">
                   <i className="fa-regular fa-file-lines" /> Lihat CV
-                </Link>
+                </a>
                 <a href="#contact" className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl border border-cyan-500/30 bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 font-semibold hover:bg-cyan-500 hover:text-white hover:-translate-y-1 transition duration-300">
                   <i className="fa-regular fa-paper-plane" /> Hubungi Saya
                 </a>
@@ -196,9 +195,9 @@ const Home = () => {
               <p className="mt-4 text-slate-500 dark:text-slate-400 leading-8">
                 Melalui berbagai tugas, projek sekolah, kegiatan organisasi, dan pengalaman praktik, saya terus mengembangkan kemampuan teknis maupun kemampuan bekerja dalam tim.
               </p>
-              <Link to="#contact" className="inline-flex items-center gap-2 mt-7 text-cyan-500 font-semibold hover:gap-4 transition-all">
+              <a href="#contact" className="inline-flex items-center gap-2 mt-7 text-cyan-500 font-semibold hover:gap-4 transition-all">
                 Hubungi Saya <ArrowRight className="w-4 h-4" />
-              </Link>
+              </a>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
@@ -398,7 +397,7 @@ const Home = () => {
                 </p>
               </div>
               <a 
-  href="/cv_Dini.pdf" 
+  href="/CV_Dini.pdf" 
   download="CV_Dini.pdf" 
   target="_blank" 
   rel="noopener noreferrer" 

@@ -29,7 +29,8 @@ export function useAbout() {
 
   const createAbout = useCallback(
     async (payload: AboutInsert & { photoFile?: File }) => {
-      const { photoFile, ...dbPayload } = stripUploadFields(payload);
+      const { photoFile } = payload;
+      const dbPayload = stripUploadFields(payload);
 
       let photoPath = dbPayload.photo as string | undefined;
       if (photoFile) {
@@ -57,17 +58,23 @@ export function useAbout() {
       id: string,
       payload: AboutUpdate & { photoFile?: File; removeImage?: boolean },
     ) => {
-      const { photoFile, removeImage, ...dbPayload } = stripUploadFields(payload);
+      const { photoFile, removeImage } = payload;
+      const dbPayload = stripUploadFields(payload);
 
-      let photoPath = dbPayload.photo as string | undefined;
-      if (removeImage && dbPayload.photo) {
-        await supabase.storage.from('public').remove([dbPayload.photo]);
-        photoPath = undefined;
+      let photoPath = dbPayload.photo as string | null | undefined;
+
+      // Hapus file lama di server bila gambar diganti atau dihapus.
+      if (removeImage || photoFile) {
+        const { data: current } = await supabase
+          .from('abouts')
+          .select('photo')
+          .eq('id', id)
+          .single();
+        const oldPath = (current as { photo?: string | null } | null)?.photo;
+        if (oldPath) await supabase.storage.from('public').remove([oldPath]);
+        if (removeImage) photoPath = null;
       }
       if (photoFile) {
-        if (dbPayload.photo) {
-          await supabase.storage.from('public').remove([dbPayload.photo]);
-        }
         const fileName = `${Date.now()}-${photoFile.name.replace(/\s+/g, '_')}`;
         const { error: uploadErr } = await supabase.storage
           .from('public')

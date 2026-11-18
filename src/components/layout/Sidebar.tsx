@@ -1,4 +1,5 @@
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../hooks/useAuth';
 import {
   Gauge,
   Folder,
@@ -9,6 +10,7 @@ import {
   MessageCircle,
   ArrowUpRightFromSquare,
   Shield,
+  LogOut,
 } from 'lucide-react';
 
 const navItems = [
@@ -23,6 +25,13 @@ const navItems = [
 
 const Sidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/login', { replace: true });
+  };
 
   const isActive = (path: string) => location.pathname === path || location.pathname.startsWith(`${path}/`);
 
@@ -55,7 +64,20 @@ const Sidebar = () => {
           <ArrowUpRightFromSquare className="w-5 h-5 mr-2" />
           <span>Lihat Website</span>
         </Link>
+
+        <button
+          type="button"
+          onClick={handleSignOut}
+          className="w-full flex items-center px-3 py-2 rounded-lg hover:bg-red-500/20 text-red-300 transition"
+        >
+          <LogOut className="w-5 h-5 mr-2" />
+          <span>Logout</span>
+        </button>
       </nav>
+
+      {user?.email && (
+        <p className="mt-6 text-xs text-white/40 break-all">Masuk sebagai {user.email}</p>
+      )}
     </aside>
   );
 };

@@ -9,8 +9,12 @@
     "preview": "vite preview",
     "wasmer:build": "vite build",
     "wasmer:deploy": "vite build && wasmer deploy",
-    "start": "node server/index.js",
-    "dev:api": "node server/index.js"
+    "start": "node --env-file-if-exists=.env server/index.js",
+    "dev:api": "node --env-file-if-exists=.env server/index.js",
+    "db:local": "bash scripts/local-db.sh start",
+    "db:stop": "bash scripts/local-db.sh stop",
+    "db:status": "bash scripts/local-db.sh status",
+    "dev:all": "bash scripts/local-db.sh start && (npm run dev:api & npm run dev; kill %1 2>/dev/null || true)"
   },
   "dependencies": {
     "bcryptjs": "^3.0.3",

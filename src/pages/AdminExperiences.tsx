@@ -5,6 +5,7 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Textarea from '../components/ui/Textarea';
 import { getPublicUrl } from '../hooks/useStorage';
+import { useFilePreview } from '../hooks/useFilePreview';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import type { Experience } from '../hooks/useExperiences';
 
@@ -30,6 +31,8 @@ const AdminExperiences = () => {
   });
 
   const isEdit = editId !== null;
+  const localPreview = useFilePreview(form.imageFile);
+  const previewUrl = localPreview || (form.image ? getPublicUrl(form.image) : '');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -163,16 +166,18 @@ const AdminExperiences = () => {
           <Textarea label="Deskripsi" rows="4" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} />
           <div>
             <label className="block text-sm font-semibold mb-2">Gambar (opsional)</label>
-            {isEdit && form.image && (
+            {previewUrl && (
               <div className="mb-3">
-                <img src={getPublicUrl(form.image)} alt="current" className="w-40 h-40 object-cover rounded-xl mb-2" />
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, image: '', imageFile: null })}
-                  className="text-xs text-red-500 hover:text-red-600 underline"
-                >
-                  Hapus gambar saat ini
-                </button>
+                <img src={previewUrl} alt="preview" className="w-40 h-40 object-cover rounded-xl mb-2" />
+                {isEdit && form.image && !form.imageFile && (
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, image: '', imageFile: null })}
+                    className="text-xs text-red-500 hover:text-red-600 underline"
+                  >
+                    Hapus gambar saat ini
+                  </button>
+                )}
               </div>
             )}
             <input

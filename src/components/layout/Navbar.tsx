@@ -1,6 +1,6 @@
 
 import { Link, useLocation } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Sun, Moon, Menu, X, LogOut, ArrowRight } from 'lucide-react';
 import { useAuth } from '../../hooks/useAuth';
 
@@ -15,6 +15,12 @@ const Navbar = () => {
 
   const location = useLocation();
   const { user, signOut } = useAuth();
+
+  // Sinkronkan class .dark dengan pilihan tema saat halaman dimuat
+  useEffect(() => {
+    document.documentElement.classList.toggle('dark', dark);
+    localStorage.setItem('theme', dark ? 'dark' : 'light');
+  }, [dark]);
 
   // Mengatur tema
   const toggleTheme = () => {
@@ -138,9 +144,9 @@ const Navbar = () => {
             ) : (
               <Link
                 to="/login"
-                className="text-slate-700 dark:text-white hover:text-cyan-400 transition"
+                className="px-5 py-2 rounded-full border border-slate-300 dark:border-white/20 text-slate-700 dark:text-white font-semibold hover:border-cyan-500 hover:text-cyan-500 transition"
               >
-                
+                Login
               </Link>
             )}
 
@@ -260,7 +266,7 @@ const Navbar = () => {
                 onClick={() => setMobileMenuOpen(false)}
                 className={mobileLinkClass}
               >
-                
+                Login
               </Link>
             )}
 

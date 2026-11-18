@@ -5,6 +5,7 @@ import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Textarea from '../components/ui/Textarea';
 import { getPublicUrl } from '../hooks/useStorage';
+import { useFilePreview } from '../hooks/useFilePreview';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import type { Blog } from '../hooks/useBlogs';
 
@@ -27,6 +28,8 @@ const AdminBlogs = () => {
   });
 
   const isEdit = editId !== null;
+  const localPreview = useFilePreview(form.thumbnailFile);
+  const previewUrl = localPreview || (form.thumbnail ? getPublicUrl(form.thumbnail) : '');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -144,16 +147,18 @@ const AdminBlogs = () => {
           <Textarea label="Excerpt / Ringkasan (opsional)" rows="3" value={form.excerpt} onChange={(e) => setForm({ ...form, excerpt: e.target.value })} />
           <div>
             <label className="block text-sm font-semibold mb-2">Thumbnail (opsional)</label>
-            {isEdit && form.thumbnail && (
+            {previewUrl && (
               <div className="mb-3">
-                <img src={getPublicUrl(form.thumbnail)} alt="current" className="w-40 rounded-xl mb-2" />
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, thumbnail: '', thumbnailFile: null })}
-                  className="text-xs text-red-500 hover:text-red-600 underline"
-                >
-                  Hapus gambar saat ini
-                </button>
+                <img src={previewUrl} alt="preview" className="w-40 rounded-xl mb-2" />
+                {isEdit && form.thumbnail && !form.thumbnailFile && (
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, thumbnail: '', thumbnailFile: null })}
+                    className="text-xs text-red-500 hover:text-red-600 underline"
+                  >
+                    Hapus gambar saat ini
+                  </button>
+                )}
               </div>
             )}
             <label className="block text-sm font-semibold mb-2">Pilih Gambar Baru</label>
@@ -183,7 +188,7 @@ const AdminBlogs = () => {
           </div>
           <div className="flex gap-3 pt-2">
             <Button type="submit" disabled={loading} className="flex-1">{isEdit ? 'Update' : 'Simpan'}</Button>
-            <Button variant="ghost" onClick={() => setOpen(false)} className="flex-1">Batal</Button>
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="flex-1">Batal</Button>
           </div>
         </form>
       </Modal>

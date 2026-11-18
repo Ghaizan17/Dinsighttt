@@ -4,8 +4,8 @@ import { Plus, Trash2, Edit3, Image, Link as LinkIcon } from 'lucide-react';
 import Button from '../components/ui/Button';
 import Input from '../components/ui/Input';
 import Textarea from '../components/ui/Textarea';
-import FileInput from '../components/ui/FileInput';
 import { getPublicUrl } from '../hooks/useStorage';
+import { useFilePreview } from '../hooks/useFilePreview';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import type { Project } from '../hooks/useProjects';
 
@@ -16,6 +16,8 @@ const AdminProjects = () => {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [confirmId, setConfirmId] = useState<string | null>(null);
   const [confirmImage, setConfirmImage] = useState<string | undefined>(undefined);
+  const [submitting, setSubmitting] = useState(false);
+  const [formError, setFormError] = useState<string | null>(null);
 
   const [form, setForm] = useState({
     title: '',
@@ -28,33 +30,48 @@ const AdminProjects = () => {
   });
 
   const isEdit = editId !== null;
+  const localPreview = useFilePreview(form.imageFile);
+  const previewUrl = localPreview || (form.image ? getPublicUrl(form.image) : '');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (isEdit && editId) {
-      await updateProject(editId, {
-        title: form.title,
-        description: form.description,
-        demo_link: form.demo_link || null,
-        repo_link: form.repo_link || null,
-        tech_stack: form.tech_stack || null,
-        imageFile: form.imageFile ?? undefined,
-        removeImage: !form.imageFile && !form.image ? true : undefined,
-        image: form.imageFile ? undefined : (form.image || null),
-      });
+    setFormError(null);
+    setSubmitting(true);
+    try {
+      const result = isEdit && editId
+        ? await updateProject(editId, {
+            title: form.title,
+            description: form.description,
+            demo_link: form.demo_link || null,
+            repo_link: form.repo_link || null,
+            tech_stack: form.tech_stack || null,
+            imageFile: form.imageFile ?? undefined,
+            removeImage: !form.imageFile && !form.image ? true : undefined,
+            image: form.imageFile ? undefined : (form.image || null),
+          })
+        : await createProject({
+            title: form.title,
+            description: form.description,
+            demo_link: form.demo_link || null,
+            repo_link: form.repo_link || null,
+            tech_stack: form.tech_stack || null,
+            imageFile: form.imageFile ?? undefined,
+          });
+
+      if (result.error) {
+        setFormError(typeof result.error === 'string' ? result.error : (result.error as { message: string }).message);
+        return;
+      }
+
       setEditId(null);
-    } else {
-      await createProject({
-        title: form.title,
-        description: form.description,
-        demo_link: form.demo_link || null,
-        repo_link: form.repo_link || null,
-        tech_stack: form.tech_stack || null,
-        imageFile: form.imageFile ?? undefined,
-      });
+      setForm({ title: '', description: '', demo_link: '', repo_link: '', tech_stack: '', image: '', imageFile: null });
+      setOpen(false);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : 'Terjadi kesalahan sistem.';
+      setFormError(msg);
+    } finally {
+      setSubmitting(false);
     }
-    setForm({ title: '', description: '', demo_link: '', repo_link: '', tech_stack: '', image: '', imageFile: null });
-    setOpen(false);
   };
 
   const handleEdit = (project: Project) => {
@@ -144,36 +161,46 @@ const AdminProjects = () => {
         title={isEdit ? 'Edit Project' : 'Tambah Project'}
       >
         <form onSubmit={handleSubmit} className="space-y-4" encType="multipart/form-data">
+          {formError && (
+            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm font-medium">
+              <i className="fa-solid fa-circle-exclamation mr-2" />
+              {formError}
+            </div>
+          )}
           <Input label="Judul Project" value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} required />
           <Textarea label="Deskripsi" rows="4" value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} required />
           <div>
             <label className="block text-sm font-semibold mb-2">Gambar Project</label>
-            {isEdit && form.image && (
+            {previewUrl && (
               <div className="mb-3">
-                <img src={getPublicUrl(form.image)} alt="current" className="w-32 h-32 object-cover rounded-xl mb-2" />
-                <button
-                  type="button"
-                  onClick={() => setForm({ ...form, image: '', imageFile: null })}
-                  className="text-xs text-red-500 hover:text-red-600 underline"
-                >
-                  Hapus gambar saat ini
-                </button>
+                <img src={previewUrl} alt="preview" className="w-32 h-32 object-cover rounded-xl mb-2" />
+                {isEdit && form.image && !form.imageFile && (
+                  <button
+                    type="button"
+                    onClick={() => setForm({ ...form, image: '', imageFile: null })}
+                    className="text-xs text-red-500 hover:text-red-600 underline"
+                  >
+                    Hapus gambar saat ini
+                  </button>
+                )}
               </div>
             )}
-            <FileInput label={isEdit ? 'Ganti Gambar (opsional)' : 'Gambar Project'} accept="image/*" onRemove={() => setForm({ ...form, image: '', imageFile: null })} />
             <input
-              id="file-input"
               type="file"
               accept="image/*"
               onChange={(e) => {
                 if (e.target.files?.[0]) setForm({ ...form, imageFile: e.target.files[0] });
               }}
-              className="hidden"
+              className="w-full px-4 py-2.5 rounded-xl bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white text-sm focus:outline-none transition file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-xs file:font-semibold file:bg-cyan-500 file:text-white hover:file:bg-cyan-600 cursor-pointer"
             />
-            <button type="button" onClick={() => document.getElementById('file-input')?.click()} className="text-xs text-cyan-500 hover:underline">
-              Pilih file gambar
-            </button>
-            {isEdit && form.image && <p className="text-xs text-slate-500 mt-1">Biarkan kosong untuk tetap menggunakan gambar saat ini.</p>}
+            {form.imageFile && (
+              <p className="mt-1 text-xs text-cyan-500">
+                File dipilih: {form.imageFile.name} ({(form.imageFile.size / 1024).toFixed(1)} KB)
+              </p>
+            )}
+            {isEdit && form.image && !form.imageFile && (
+              <p className="text-xs text-slate-500 mt-1">Biarkan kosong untuk tetap menggunakan gambar saat ini.</p>
+            )}
           </div>
           <div className="grid md:grid-cols-2 gap-4">
             <Input label="Link Demo" type="url" value={form.demo_link} onChange={(e) => setForm({ ...form, demo_link: e.target.value })} placeholder="https://demo.example.com" />
@@ -181,8 +208,8 @@ const AdminProjects = () => {
           </div>
           <Input label="Tech Stack" value={form.tech_stack} onChange={(e) => setForm({ ...form, tech_stack: e.target.value })} placeholder="Laravel, Tailwind, MySQL" />
           <div className="flex gap-3 pt-2">
-            <Button type="submit" disabled={loading} className="flex-1">{isEdit ? 'Update' : 'Simpan'}</Button>
-            <Button variant="ghost" onClick={() => setOpen(false)} className="flex-1">Batal</Button>
+            <Button type="submit" disabled={submitting || loading} className="flex-1">{submitting ? 'Menyimpan...' : isEdit ? 'Update' : 'Simpan'}</Button>
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="flex-1">Batal</Button>
           </div>
         </form>
       </Modal>

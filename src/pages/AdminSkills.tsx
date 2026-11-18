@@ -7,7 +7,7 @@ import Select from '../components/ui/Select';
 import ConfirmDialog from '../components/ui/ConfirmDialog';
 import type { Skill } from '../hooks/useSkills';
 
-const CATEGORIES = ['Frontend', 'Backend', 'Database', 'Design', 'Tools', 'Soft Skill'];
+const CATEGORIES = ['Frontend', 'Backend', 'Database', 'Design', 'Tools', 'Soft Skill', 'Technical'];
 
 const AdminSkills = () => {
   const { skills, loading, createSkill, updateSkill, deleteSkill } = useSkills();
@@ -126,7 +126,7 @@ const AdminSkills = () => {
           <Input label="Persentase Penguasaan (%)" type="number" min="0" max="100" value={String(form.percentage)} onChange={(e) => setForm({ ...form, percentage: Number(e.target.value) })} required />
           <div className="flex gap-3 pt-2">
             <Button type="submit" disabled={loading} className="flex-1">{isEdit ? 'Update' : 'Simpan'}</Button>
-            <Button variant="ghost" onClick={() => setOpen(false)} className="flex-1">Batal</Button>
+            <Button type="button" variant="ghost" onClick={() => setOpen(false)} className="flex-1">Batal</Button>
           </div>
         </form>
       </Modal>

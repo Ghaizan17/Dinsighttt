@@ -29,7 +29,8 @@ export function useBlogs() {
 
   const createBlog = useCallback(
     async (payload: BlogInsert & { thumbnailFile?: File; removeImage?: boolean }) => {
-      const { thumbnailFile, removeImage, ...dbPayload } = stripUploadFields(payload);
+      const { thumbnailFile, removeImage } = payload;
+      const dbPayload = stripUploadFields(payload);
 
       let thumbnailPath = dbPayload.thumbnail as string | undefined;
       if (thumbnailFile) {
@@ -61,17 +62,23 @@ export function useBlogs() {
       id: string,
       payload: BlogUpdate & { thumbnailFile?: File; removeImage?: boolean },
     ) => {
-      const { thumbnailFile, removeImage, ...dbPayload } = stripUploadFields(payload);
+      const { thumbnailFile, removeImage } = payload;
+      const dbPayload = stripUploadFields(payload);
 
-      let thumbnailPath = dbPayload.thumbnail as string | undefined;
-      if (removeImage && dbPayload.thumbnail) {
-        await supabase.storage.from('public').remove([dbPayload.thumbnail]);
-        thumbnailPath = undefined;
+      let thumbnailPath = dbPayload.thumbnail as string | null | undefined;
+
+      // Hapus file lama di server bila gambar diganti atau dihapus.
+      if (removeImage || thumbnailFile) {
+        const { data: current } = await supabase
+          .from('blogs')
+          .select('thumbnail')
+          .eq('id', id)
+          .single();
+        const oldPath = (current as { thumbnail?: string | null } | null)?.thumbnail;
+        if (oldPath) await supabase.storage.from('public').remove([oldPath]);
+        if (removeImage) thumbnailPath = null;
       }
       if (thumbnailFile) {
-        if (dbPayload.thumbnail) {
-          await supabase.storage.from('public').remove([dbPayload.thumbnail]);
-        }
         const fileName = `${Date.now()}-${thumbnailFile.name.replace(/\s+/g, '_')}`;
         const { error: uploadErr } = await supabase.storage
           .from('public')

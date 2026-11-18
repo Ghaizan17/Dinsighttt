@@ -1,4 +1,3 @@
-import { Link } from 'react-router-dom';
 import { getPublicUrl } from '../../hooks/useStorage';
 import { format } from 'date-fns';
 import type { Blog } from '../../hooks/useBlogs';
@@ -26,10 +25,8 @@ const BlogCard = ({ blog }: BlogCardProps) => {
         <p className="text-xs text-slate-500 mb-2">
           <i className="fa-regular fa-calendar mr-1" /> {publishedDate}
         </p>
-        <Link to={`/blogs/${blog.slug || blog.id}`} className="block">
-          <h3 className="text-xl font-bold text-slate-900 dark:text-white line-clamp-2 group-hover:text-cyan-500 transition">{blog.title}</h3>
-          <p className="mt-3 text-sm text-slate-500 line-clamp-3">{blog.excerpt ?? blog.content.slice(0, 150)}...</p>
-        </Link>
+        <h3 className="text-xl font-bold text-slate-900 dark:text-white line-clamp-2 group-hover:text-cyan-500 transition">{blog.title}</h3>
+        <p className="mt-3 text-sm text-slate-500 line-clamp-3">{blog.excerpt ?? `${(blog.content ?? '').slice(0, 150)}...`}</p>
       </div>
     </article>
   );

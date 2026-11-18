@@ -1,5 +1,4 @@
-import { Link } from 'react-router-dom';
-import { ArrowUpRightFromSquare, Eye } from 'lucide-react';
+import { ArrowUpRightFromSquare, Eye, Github } from 'lucide-react';
 import { getPublicUrl } from '../../hooks/useStorage';
 import type { Project } from '../../hooks/useProjects';
 
@@ -20,7 +19,7 @@ const ProjectCard = ({ project, showActions = false }: ProjectCardProps) => {
   })();
 
   return (
-    <article className="overflow-hidden rounded-3xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/10 shadow-xl transition duration-700 group hover:-translate-y-4 hover:shadow-2xl">
+    <article className="relative overflow-hidden rounded-3xl bg-white dark:bg-[#111827] border border-slate-200 dark:border-white/10 shadow-xl transition duration-700 group hover:-translate-y-4 hover:shadow-2xl">
       <div className="relative overflow-hidden h-64">
         {imageUrl ? (
           <img src={imageUrl} alt={project.title} className="w-full h-full object-cover transition duration-700 group-hover:scale-105" />
@@ -37,21 +36,31 @@ const ProjectCard = ({ project, showActions = false }: ProjectCardProps) => {
         {project.tech_stack && (
           <p className="mt-3 text-xs text-cyan-500 font-semibold uppercase tracking-wider">{project.tech_stack}</p>
         )}
-        <div className="mt-5 flex items-center gap-2">
-          <Link
-            to={`/projects/${project.id}`}
-            className="inline-flex items-center gap-2 text-cyan-500 font-semibold hover:gap-3 transition"
-          >
-            Lihat Detail <ArrowUpRightFromSquare className="w-4 h-4" />
-          </Link>
+        <div className="mt-5 flex flex-wrap items-center gap-3">
+          {project.demo_link && (
+            <a
+              href={project.demo_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-cyan-500 font-semibold hover:gap-3 transition"
+            >
+              Lihat Demo <ArrowUpRightFromSquare className="w-4 h-4" />
+            </a>
+          )}
+          {project.repo_link && (
+            <a
+              href={project.repo_link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 text-slate-500 dark:text-slate-400 font-semibold hover:text-cyan-500 transition"
+            >
+              <Github className="w-4 h-4" /> Repo
+            </a>
+          )}
+          {!project.demo_link && !project.repo_link && (
+            <span className="text-sm text-slate-400">—</span>
+          )}
         </div>
-      </div>
-      <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition">
-        {project.demo_link && (
-          <a href={project.demo_link} target="_blank" rel="noopener noreferrer" className="w-10 h-10 rounded-full bg-white dark:bg-white/10 flex items-center justify-center text-cyan-500 hover:bg-cyan-500 hover:text-white transition shadow-lg">
-            <Eye className="w-5 h-5" />
-          </a>
-        )}
       </div>
     </article>
   );

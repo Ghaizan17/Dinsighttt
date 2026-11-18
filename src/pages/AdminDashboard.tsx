@@ -60,7 +60,7 @@ const AdminDashboard = () => {
             <p className="text-sm text-slate-500">Unduh file CV terbaru dalam format PDF.</p>
           </div>
         </div>
-        <a href="/cv.pdf" target="_blank" rel="noopener noreferrer" className="px-6 py-3 rounded-xl bg-slate-200 dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-semibold hover:bg-slate-300 dark:hover:bg-white/20 transition inline-block">
+        <a href="/CV_Dini.pdf" target="_blank" rel="noopener noreferrer" download="CV_Dini.pdf" className="px-6 py-3 rounded-xl bg-slate-200 dark:bg-white/10 border border-slate-200 dark:border-white/10 text-slate-900 dark:text-white font-semibold hover:bg-slate-300 dark:hover:bg-white/20 transition inline-block">
           Unduh CV
         </a>
       </div>

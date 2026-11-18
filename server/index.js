@@ -34,9 +34,15 @@ const pool = mysql.createPool({
 });
 
 async function init() {
+  const fatal = new Set(['ER_ACCESS_DENIED_ERROR', 'ER_ACCESS_DENIED_NO_PASSWORD_ERROR', 'ER_BAD_DB_ERROR', 'ER_DBACCESS_DENIED_ERROR']);
   for (let i = 0; ; i++) {
     try { await pool.query('SELECT 1'); break; }
     catch (e) {
+      if (fatal.has(e.code)) {
+        console.error(`[server] MySQL menolak koneksi (${e.code}): ${e.message}`);
+        console.error('[server] Periksa MYSQL_URL di .env. Untuk dev lokal jalankan: npm run db:local');
+        throw e;
+      }
       if (i >= 30) throw e;
       console.log(`[server] waiting for MySQL (${e.code})...`);
       await new Promise((r) => setTimeout(r, 2000));
@@ -56,6 +62,7 @@ async function init() {
 }
 
 const app = express();
+app.set('trust proxy', true);
 app.use(express.json({ limit: '2mb' }));
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 10 * 1024 * 1024 } });
 const wrap = (fn) => (req, res) => Promise.resolve(fn(req, res)).catch((e) => {
@@ -76,13 +83,30 @@ const requireAdmin = (req, res, next) => {
 };
 
 // ---- auth ----
+const loginAttempts = new Map();
+const LOGIN_WINDOW_MS = 10 * 60 * 1000;
+const LOGIN_MAX_ATTEMPTS = 10;
+function tooManyAttempts(key) {
+  const now = Date.now();
+  const list = (loginAttempts.get(key) || []).filter((t) => now - t < LOGIN_WINDOW_MS);
+  if (list.length >= LOGIN_MAX_ATTEMPTS) return true;
+  list.push(now);
+  loginAttempts.set(key, list);
+  return false;
+}
+
 app.post('/api/auth/login', wrap(async (req, res) => {
   const { email, password } = req.body || {};
+  const key = String(email || '').trim().toLowerCase() || 'anonymous';
+  if (tooManyAttempts(key)) {
+    return res.status(429).json({ error: 'Terlalu banyak percobaan login. Coba lagi beberapa menit.' });
+  }
   const [rows] = await pool.query('SELECT * FROM users WHERE email = ?', [email || '']);
   const u = rows[0];
   if (!u || !(await bcrypt.compare(String(password || ''), u.password_hash))) {
     return res.status(401).json({ error: 'Email atau password salah.' });
   }
+  loginAttempts.delete(key);
   const user = { id: u.id, email: u.email, name: u.name, role: u.role };
   res.json({ token: jwt.sign(user, JWT_SECRET, { expiresIn: '7d' }), user });
 }));
@@ -99,12 +123,15 @@ function tableOf(req) {
   return t;
 }
 const colsOf = (t) => new Set(['id', 'created_at', 'updated_at', ...Object.keys(tables[t])]);
-const toRow = (r) => (r && r.created_at instanceof Date ? { ...r } : r);
 
 app.get('/api/t/:table', wrap(async (req, res) => {
   const t = tableOf(req);
   const cols = colsOf(t);
   const admin = authUser(req)?.role === 'admin';
+  // Tabel tanpa aturan baca publik bersifat tertutup untuk pengunjung.
+  if (!admin && !Object.hasOwn(publicRead, t)) {
+    return res.status(403).json({ error: 'Forbidden' });
+  }
   const where = [];
   const args = [];
   for (const [k, v] of Object.entries(req.query)) {
@@ -146,7 +173,18 @@ app.post('/api/t/:table', wrap(async (req, res) => {
   let data = cleanBody(t, req.body, true);
   if (!admin) {
     if (t !== 'guestbooks') return res.status(401).json({ error: 'Unauthorized' });
-    data = { name: data.name, email: data.email ?? null, message: data.message, is_approved: 0, ip_address: req.ip };
+    const text = (v) => (typeof v === 'string' ? v.trim() : '');
+    const name = text(data.name);
+    const message = text(data.message);
+    const email = text(data.email) || null;
+    if (!name) return res.status(400).json({ error: 'Nama wajib diisi.' });
+    if (!message) return res.status(400).json({ error: 'Pesan wajib diisi.' });
+    if (name.length > 255) return res.status(400).json({ error: 'Nama maksimal 255 karakter.' });
+    if (message.length > 2000) return res.status(400).json({ error: 'Pesan maksimal 2000 karakter.' });
+    if (email && (email.length > 255 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))) {
+      return res.status(400).json({ error: 'Format email tidak valid.' });
+    }
+    data = { name, email, message, is_approved: 0, ip_address: req.ip };
   }
   const id = crypto.randomUUID();
   const keys = Object.keys(data);
